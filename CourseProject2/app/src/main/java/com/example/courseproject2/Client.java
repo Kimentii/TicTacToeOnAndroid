@@ -57,7 +57,8 @@ public class Client extends AsyncTask<Void, Integer, Void> {
             in = new DataInputStream(clientSocket.getInputStream());
             out = new DataOutputStream(clientSocket.getOutputStream());
             player = in.readUTF();
-            opponent = player == "O"?"X" :"O";
+            if(player.toCharArray()[0] == 'O') opponent = "X";
+            else opponent = "O";
             System.out.println("I'm " + player);
             System.out.println("My opponent is " + opponent);
            /* if(player == "O")
