@@ -29,9 +29,10 @@ public class MainActivity extends Activity {
         }
 
         public void onClick(View view) {
-            if (buttons[x][y].getText() == "" && client != null) {
+            if (buttons[x][y].getText() == "" && client != null && client.getTurn()) {
                 client.write(Integer.toString(x), Integer.toString(y));
                 buttons[x][y].setText(client.getPlayer());
+                client.changeTurn();
             }
         }
     }

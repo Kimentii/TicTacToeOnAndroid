@@ -25,6 +25,7 @@ public class Client extends AsyncTask<Void, String, Void> {
     String opponent;
     String x, y;
     Toast toast;
+    boolean isMyTurn;
 
     public Client(int p, Button[][] b, TextView tv, Toast t) {
         buttons = b;
@@ -38,6 +39,16 @@ public class Client extends AsyncTask<Void, String, Void> {
             for (int j = 0; j < 3; j++)
                 buttons[i][j].setText("");
         }
+    }
+
+    public boolean getTurn()
+    {
+        return isMyTurn;
+    }
+
+    public void changeTurn()
+    {
+     isMyTurn = false;
     }
 
     public String getPlayer() {
@@ -82,8 +93,16 @@ public class Client extends AsyncTask<Void, String, Void> {
             in = new DataInputStream(clientSocket.getInputStream());
             out = new DataOutputStream(clientSocket.getOutputStream());
             player = in.readUTF();
-            if (player.toCharArray()[0] == 'O') opponent = "X";
-            else opponent = "O";
+            if (player.toCharArray()[0] == 'O')
+            {
+                isMyTurn = false;
+                opponent = "X";
+            }
+            else
+            {
+                isMyTurn = true;
+                opponent = "O";
+            }
             publishProgress("You are " + player);
             System.out.println("I'm " + player);
             System.out.println("My opponent is " + opponent);
@@ -97,6 +116,7 @@ public class Client extends AsyncTask<Void, String, Void> {
                 System.out.println("Client:" + x);
                 System.out.println("Client:" + y);
                 publishProgress(x, y);
+                isMyTurn = true;
             }
         } catch (java.net.ConnectException e) {
             publishProgress("ERROR", "failed to connect to server.");
