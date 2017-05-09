@@ -1,5 +1,9 @@
-import java.net.*;
-import java.io.*;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.ServerSocket;
+import java.net.Socket;
 
 public class Main {
 	static Game game = new Game();
@@ -52,7 +56,10 @@ public class Main {
 
 			String line, line2;
 			int x, y, x2, y2;
+			Player winner;
 			game.start();
+			try
+			{
 			while (true) {
 				while (true) {
 					line = in.readUTF();
@@ -70,7 +77,23 @@ public class Main {
 	                }
 				}
 				System.out.println("O is going to go");
-
+				winner = game.checkWinner();
+				if(winner != null)
+				{
+					out.writeUTF(winner.getName() + " wins.");
+					out2.writeUTF(winner.getName() + " wins.");
+					System.out.println(winner.getName() + " wins.");
+					game.reset();
+					continue;
+				}
+				if(game.isFieldFilled() && winner == null)
+				{
+					out.writeUTF("draw.");
+					out2.writeUTF("draw");
+					System.out.println("draw");
+					game.reset();
+					continue;
+				}
 				while(true)
 				{
 					line2 = in2.readUTF();
@@ -88,8 +111,33 @@ public class Main {
 	                }
 				}
 				System.out.println("O end its step");
+				winner = game.checkWinner();
+				if(winner != null)
+				{
+					out.writeUTF(winner.getName() + " win.");
+					out2.writeUTF(winner.getName() + " win.");
+					System.out.println(winner.getName() + " win.");
+					game.reset();
+				}
+				if(game.isFieldFilled() && winner == null)
+				{
+					out.writeUTF("draw.");
+					out2.writeUTF("draw");
+					System.out.println("draw");
+					game.reset();
+				}
 			}
-		} catch (Exception x) {
+			}catch(java.io.EOFException e)
+			{
+				System.out.println("Sombody terminated.");
+				socket.shutdownInput();
+				socket.shutdownOutput();
+				socket.close();
+				socket2.shutdownInput();
+				socket2.shutdownOutput();
+				socket2.close();
+			}
+		}	catch (Exception x) {
 			x.printStackTrace();
 		}
 

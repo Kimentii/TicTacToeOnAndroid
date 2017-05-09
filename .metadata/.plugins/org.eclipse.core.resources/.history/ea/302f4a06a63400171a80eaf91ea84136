@@ -1,0 +1,98 @@
+import java.net.*;
+import java.io.*;
+
+public class Main {
+	static Game game = new Game();
+	static final int PORT = 6666;
+
+	public static void main(String[] args) {
+		try {
+			ServerSocket serverSocket = new ServerSocket(PORT); // создаем сокет
+																// сервера и
+																// прив€зываем
+																// его к
+																// вышеуказанному
+																// порту
+			System.out.println("Waiting for a client...");
+
+			Socket socket = serverSocket.accept(); // заставл€ем сервер ждать
+													// подключений и выводим
+													// сообщение когда кто-то
+													// св€залс€ с сервером
+			System.out.println("Got a client :) ... Finally, someone saw me through all the cover!");
+			System.out.println();
+
+			// Ѕерем входной и выходной потоки сокета, теперь можем получать и
+			// отсылать данные клиенту.
+			InputStream sin = socket.getInputStream();
+			OutputStream sout = socket.getOutputStream();
+
+			//  онвертируем потоки в другой тип, чтоб легче обрабатывать
+			// текстовые сообщени€.
+			DataInputStream in = new DataInputStream(sin);
+			DataOutputStream out = new DataOutputStream(sout);
+			out.writeUTF("X");
+
+			// ѕодключение второго игрока
+			System.out.println("Waiting for a client...");
+			Socket socket2 = serverSocket.accept();
+			System.out.println("Got a client :) ... Finally, someone saw me through all the cover!");
+			System.out.println();
+
+			// Ѕерем входной и выходной потоки сокета, теперь можем получать и
+			// отсылать данные клиенту.
+			InputStream sin2 = socket2.getInputStream();
+			OutputStream sout2 = socket2.getOutputStream();
+
+			//  онвертируем потоки в другой тип, чтоб легче обрабатывать
+			// текстовые сообщени€.
+			DataInputStream in2 = new DataInputStream(sin2);
+			DataOutputStream out2 = new DataOutputStream(sout2);
+			out2.writeUTF("O");
+
+			String line, line2;
+			int x, y, x2, y2;
+			game.start();
+			while (true) {
+				while (true) {
+					line = in.readUTF();
+					System.out.println("X: " + line);
+					out2.writeUTF(line);
+					out2.flush();
+					x = Integer.parseInt(line);
+					line = in.readUTF();
+					System.out.println("X: " + line);
+					out2.writeUTF(line);
+					out2.flush();
+					y = Integer.parseInt(line);
+	                if (game.makeTurn(x, y)) {
+	                    break;
+	                }
+				}
+				System.out.println("O is going to go");
+
+				while(true)
+				{
+					line2 = in2.readUTF();
+					System.out.println("O: "+ line2);
+					out.writeUTF(line2);
+					out.flush();
+					x = Integer.parseInt(line2);
+					line2 = in2.readUTF();
+					System.out.println("O: "+ line2);
+					out.writeUTF(line2);
+					out.flush();
+					y = Integer.parseInt(line2);
+	                if (game.makeTurn(x, y)) {
+	                    break;
+	                }
+				}
+				System.out.println("O end its step");
+			}
+		} catch (Exception x) {
+			x.printStackTrace();
+		}
+
+	}
+
+}

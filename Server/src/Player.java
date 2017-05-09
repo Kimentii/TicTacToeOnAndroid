@@ -18,7 +18,7 @@ public class Player {
     /**
      * Функция получения имени игрока
      */
-    public CharSequence getName() {
-        return (CharSequence) name;
+    public String getName() {
+        return name;
     }
 }
