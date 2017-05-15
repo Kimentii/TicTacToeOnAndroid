@@ -11,10 +11,10 @@ import android.widget.Toast;
 
 public class MainActivity extends Activity {
 
-    private Button[][] buttons = new Button[3][3];
+    private Button[][] buttons = new Button[3][3];                      //поле из кнопок
     private TableLayout layout;
-    private TextView text;
-    Client client;
+    private TextView text;                                              //текстовое поле
+    Client client;                                                      //поле для работы с сокетом
 
     public class Listener implements View.OnClickListener {
         /**
@@ -32,16 +32,13 @@ public class MainActivity extends Activity {
             if (buttons[x][y].getText() == "" && client != null && client.getTurn()) {
                 client.write(Integer.toString(x), Integer.toString(y));
                 buttons[x][y].setText(client.getPlayer());
-                client.changeTurn();
+                client.setTurn(false);
+                text.setText("wait");
             }
         }
     }
 
     public class ClientListener implements View.OnClickListener {
-
-        public ClientListener() {
-        }
-
         public void onClick(View view) {
             if (client == null) {
                 Toast toast = Toast.makeText(MainActivity.this, "", Toast.LENGTH_SHORT);
@@ -52,15 +49,10 @@ public class MainActivity extends Activity {
     }
 
     public class ExitButtonListener implements View.OnClickListener {
-
-        public ExitButtonListener() {
-        }
-
         public void onClick(View view) {
             if (client != null) {
-                client.close();
                 try {
-                    client.wait();
+                    client.cancel(true);
                 } catch (Exception e) {
                     System.out.println("Error in exit button.");
                     e.printStackTrace();

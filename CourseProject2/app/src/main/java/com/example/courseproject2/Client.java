@@ -1,6 +1,5 @@
 package com.example.courseproject2;
 
-import android.content.Context;
 import android.os.AsyncTask;
 import android.view.Gravity;
 import android.widget.Button;
@@ -9,24 +8,28 @@ import android.widget.Toast;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.IOException;
 import java.net.InetAddress;
 import java.net.Socket;
 
 public class Client extends AsyncTask<Void, String, Void> {
 
-    String IP = "10.0.2.2";
-    int PORT;
-    Button[][] buttons;
-    TextView text;
-    DataInputStream in;
-    DataOutputStream out;
-    Socket clientSocket;
-    String player;
-    String opponent;
-    String x, y;
-    Toast toast;
-    boolean isMyTurn;
+    String IP = "192.168.100.2";                                 //локальный IP
+    int PORT;                                               //номер порта
+    Button[][] buttons;                                     //ссылка на кнопки(игровое поле)
+    TextView text;                                          //текстовое сообщение
+    DataInputStream in;                                     //поток для чтения из сокета
+    DataOutputStream out;                                   //поток для записи в сокет
+    Socket clientSocket;                                    //слиентский сокет
+    String player;                                          //символ игрока
+    String opponent;                                        //символ противника
+    String x, y;                                            //координаты хода
+    Toast toast;                                            //всплывающее сообщение
+    boolean isMyTurn;                                       //флаг для синхронизации
 
+    /*
+    Конструктор
+     */
     public Client(int p, Button[][] b, TextView tv, Toast t) {
         buttons = b;
         PORT = p;
@@ -34,6 +37,9 @@ public class Client extends AsyncTask<Void, String, Void> {
         toast = t;
     }
 
+    /*
+    Обновление игрового поля
+     */
     private void resetGameField() {
         for (int i = 0; i < 3; i++) {
             for (int j = 0; j < 3; j++)
@@ -41,46 +47,68 @@ public class Client extends AsyncTask<Void, String, Void> {
         }
     }
 
-    public boolean getTurn()
-    {
+    /*
+    Возвращает очередь
+     */
+    public boolean getTurn() {
         return isMyTurn;
     }
 
-    public void changeTurn()
-    {
-     isMyTurn = false;
+    /*
+    Передает очередь другому игроку
+     */
+    public void setTurn(Boolean t) {
+        isMyTurn = t;
     }
 
+    /*
+    Возвращает символ игрока
+     */
     public String getPlayer() {
         return player;
     }
 
+    /*
+    Функция записи в сокет
+     */
     public void write(String x, String y) {
         try {
             if (clientSocket != null) {
                 out.writeUTF(x);
                 out.writeUTF(y);
             }
+        } catch (java.net.SocketException e) {
+            System.out.println("Socket closed");
         } catch (Exception e) {
             System.out.println("Error in Client.write");
             e.printStackTrace();
         }
     }
 
-    public void close() {
-        if(clientSocket != null) {
+    public void closeSocket() {
+        if (clientSocket != null) {
             try {
                 clientSocket.shutdownInput();
                 clientSocket.shutdownOutput();
                 clientSocket.close();
                 System.out.println("client is closed");
+            } catch (java.net.SocketException e) {
+                System.out.println("java.net.SocketException");
+                try {
+                    clientSocket.close();
+                } catch (IOException e1) {
+                    e1.printStackTrace();
+                }
             } catch (Exception e) {
-                System.out.println("Error in client.close()");
+                System.out.println("Error in client.onCancelled()");
                 e.printStackTrace();
             }
         }
     }
 
+    /*
+    Работа с сокетом
+     */
     @Override
     protected Void doInBackground(Void... voids) {
         try {
@@ -93,13 +121,10 @@ public class Client extends AsyncTask<Void, String, Void> {
             in = new DataInputStream(clientSocket.getInputStream());
             out = new DataOutputStream(clientSocket.getOutputStream());
             player = in.readUTF();
-            if (player.toCharArray()[0] == 'O')
-            {
+            if (player.toCharArray()[0] == 'O') {
                 isMyTurn = false;
                 opponent = "X";
-            }
-            else
-            {
+            } else {
                 isMyTurn = true;
                 opponent = "O";
             }
@@ -107,9 +132,15 @@ public class Client extends AsyncTask<Void, String, Void> {
             System.out.println("I'm " + player);
             System.out.println("My opponent is " + opponent);
             while (true) {
+                if (isCancelled()) return null;
                 x = in.readUTF();
                 if (x.length() > 1) {
                     publishProgress(x);
+                    if (player.toCharArray()[0] == 'O') {
+                        isMyTurn = false;
+                    } else {
+                        isMyTurn = true;
+                    }
                     continue;
                 }
                 y = in.readUTF();
@@ -117,21 +148,28 @@ public class Client extends AsyncTask<Void, String, Void> {
                 System.out.println("Client:" + y);
                 publishProgress(x, y);
                 isMyTurn = true;
+                publishProgress("MASSAGE", "your turn");
             }
         } catch (java.net.ConnectException e) {
-            publishProgress("ERROR", "failed to connect to server.");
-        }catch(java.io.EOFException e)
-        {
-            System.out.println("End of game.");
+            publishProgress("ERROR", "Connection failed.");
+        } catch (java.io.EOFException e) {
+            System.out.println("Opponent closed application.");
             publishProgress("Opponent closed\n application.");
-        }
-        catch (Exception e) {
+        } catch (java.net.SocketException e) {
+            System.out.println("Server closed.");
+            closeSocket();
+            setTurn(false);
+            publishProgress("ERROR", "Server closed.");
+        } catch (Exception e) {
             System.out.println("Error in Client");
             e.printStackTrace();
         }
         return null;
     }
 
+    /*
+    Функция, которая имеет доступ к UI
+     */
     @Override
     protected void onProgressUpdate(String... strings) {
         super.onProgressUpdate(strings);
@@ -142,7 +180,11 @@ public class Client extends AsyncTask<Void, String, Void> {
             text.setText(strings[1]);
             return;
         }
-        if (strings.length == 2) {
+        if (strings[0] == "MASSAGE") {
+            text.setText(strings[1]);
+            return;
+        }
+        if (strings[0].length() == 1) {
             System.out.println("I'm setting value in " + strings[0] + strings[1]);
             int x, y;
             x = Integer.parseInt(strings[0]);
@@ -152,5 +194,14 @@ public class Client extends AsyncTask<Void, String, Void> {
             text.setText(strings[0]);
             resetGameField();
         }
+    }
+
+    /*
+    Метод выполняющийся после вызова cancel в главном потоке
+     */
+    @Override
+    protected void onCancelled() {
+        super.onCancelled();
+        closeSocket();
     }
 }
