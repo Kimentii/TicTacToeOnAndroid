@@ -54,8 +54,8 @@ public class Main {
 			DataOutputStream out2 = new DataOutputStream(sout2);
 			out2.writeUTF("O");
 
-			String line;
-			int x, y;
+			String line, line2;
+			int x, y, x2, y2;
 			Player winner;
 			game.start();
 			try
@@ -96,16 +96,16 @@ public class Main {
 				}
 				while(true)
 				{
-					line = in2.readUTF();
-					System.out.println("O: "+ line);
-					out.writeUTF(line);
+					line2 = in2.readUTF();
+					System.out.println("O: "+ line2);
+					out.writeUTF(line2);
 					out.flush();
-					x = Integer.parseInt(line);
-					line = in2.readUTF();
-					System.out.println("O: "+ line);
-					out.writeUTF(line);
+					x = Integer.parseInt(line2);
+					line2 = in2.readUTF();
+					System.out.println("O: "+ line2);
+					out.writeUTF(line2);
 					out.flush();
-					y = Integer.parseInt(line);
+					y = Integer.parseInt(line2);
 	                if (game.makeTurn(x, y)) {
 	                    break;
 	                }

@@ -10,17 +10,18 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.net.Socket;
 
 public class Client extends AsyncTask<Void, String, Void> {
 
-    String IP = "192.168.100.2";                                 //локальный IP
+    String IP = "10.0.2.2";                                 //локальный IP
     int PORT;                                               //номер порта
     Button[][] buttons;                                     //ссылка на кнопки(игровое поле)
     TextView text;                                          //текстовое сообщение
     DataInputStream in;                                     //поток для чтения из сокета
     DataOutputStream out;                                   //поток для записи в сокет
-    Socket clientSocket;                                    //слиентский сокет
+    Socket clientSocket = new Socket();                                //слиентский сокет
     String player;                                          //символ игрока
     String opponent;                                        //символ противника
     String x, y;                                            //координаты хода
@@ -114,7 +115,7 @@ public class Client extends AsyncTask<Void, String, Void> {
         try {
             InetAddress ipAddress = InetAddress.getByName(IP); // создаем объект который отображает вышеописанный IP-адрес.
             System.out.println("Trying connect to server");
-            clientSocket = new Socket(ipAddress, PORT); // создаем сокет используя IP-адрес и порт сервера.
+            clientSocket.connect(new InetSocketAddress(IP, PORT), 10000);
             System.out.println("Connected to server");
             toast.setText("Connected to server");
             toast.show();
@@ -152,6 +153,9 @@ public class Client extends AsyncTask<Void, String, Void> {
             }
         } catch (java.net.ConnectException e) {
             publishProgress("ERROR", "Connection failed.");
+
+        } catch (java.net.SocketTimeoutException e) {
+            publishProgress("ERROR", "Timeout.");
         } catch (java.io.EOFException e) {
             System.out.println("Opponent closed application.");
             publishProgress("Opponent closed\n application.");
