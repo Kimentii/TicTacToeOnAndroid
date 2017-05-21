@@ -1,7 +1,9 @@
 package com.example.courseproject2;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.os.Bundle;
+import android.support.annotation.MainThread;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TableLayout;
@@ -11,6 +13,7 @@ import android.widget.Toast;
 
 public class MainActivity extends Activity {
 
+    String IP = "10.0.2.2";
     private Button[][] buttons = new Button[3][3];                      //поле из кнопок
     private TableLayout layout;
     private TextView text;                                              //текстовое поле
@@ -42,7 +45,7 @@ public class MainActivity extends Activity {
         public void onClick(View view) {
             if (client == null) {
                 Toast toast = Toast.makeText(MainActivity.this, "", Toast.LENGTH_SHORT);
-                client = new Client(6666, buttons, text, toast);
+                client = new Client(6666, IP, buttons, text, toast);
                 client.execute();
             }
         }
@@ -59,6 +62,15 @@ public class MainActivity extends Activity {
                 }
             }
             finish();
+        }
+    }
+
+    public class setIPButtonListener implements View.OnClickListener {
+        public void onClick(View view) {
+            if(client == null) {
+                Intent intent = new Intent(getApplicationContext(), setIPActivity.class);
+                startActivityForResult(intent,1);
+            }
         }
     }
 
@@ -105,6 +117,14 @@ public class MainActivity extends Activity {
         exitButton.setWidth(150);
         exitButton.setHeight(150);
 
+        Button setIPbutton = new Button(this);
+        setIPbutton.setText("Set IP");
+        setIPbutton.setOnClickListener(new setIPButtonListener());
+        row.addView(setIPbutton, new TableRow.LayoutParams(TableRow.LayoutParams.MATCH_PARENT,
+                TableRow.LayoutParams.MATCH_PARENT));
+        setIPbutton.setWidth(150);
+        setIPbutton.setHeight(150);
+
         layout.addView(row, new TableLayout.LayoutParams(TableLayout.LayoutParams.MATCH_PARENT,
                 TableLayout.LayoutParams.MATCH_PARENT));
     }
@@ -116,5 +136,16 @@ public class MainActivity extends Activity {
         layout = (TableLayout) findViewById(R.id.main_l);
         buildGameField();
         buildServerClient();
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if(data!=null)
+        {
+            return;
+        }
+        String ip=data.getStringExtra("IP").toString();
+        if(ip.length()>0) IP = ip;
     }
 }

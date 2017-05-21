@@ -15,7 +15,7 @@ import java.net.Socket;
 
 public class Client extends AsyncTask<Void, String, Void> {
 
-    String IP = "10.0.2.2";                                 //локальный IP
+    String IP;                                 //локальный IP
     int PORT;                                               //номер порта
     Button[][] buttons;                                     //ссылка на кнопки(игровое поле)
     TextView text;                                          //текстовое сообщение
@@ -31,9 +31,10 @@ public class Client extends AsyncTask<Void, String, Void> {
     /*
     Конструктор
      */
-    public Client(int p, Button[][] b, TextView tv, Toast t) {
+    public Client(int p, String ip, Button[][] b, TextView tv, Toast t) {
         buttons = b;
         PORT = p;
+        IP = ip;
         text = tv;
         toast = t;
     }
@@ -115,7 +116,7 @@ public class Client extends AsyncTask<Void, String, Void> {
         try {
             InetAddress ipAddress = InetAddress.getByName(IP); // создаем объект который отображает вышеописанный IP-адрес.
             System.out.println("Trying connect to server");
-            clientSocket.connect(new InetSocketAddress(IP, PORT), 10000);
+            clientSocket.connect(new InetSocketAddress(IP, PORT), 5000);
             System.out.println("Connected to server");
             toast.setText("Connected to server");
             toast.show();
