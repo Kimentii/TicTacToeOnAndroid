@@ -4,12 +4,15 @@ import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.MainThread;
+import android.view.Menu;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TableLayout;
 import android.widget.TableRow;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import java.util.concurrent.Semaphore;
 
 public class MainActivity extends Activity {
 
@@ -18,6 +21,7 @@ public class MainActivity extends Activity {
     private TableLayout layout;
     private TextView text;                                              //текстовое поле
     Client client;                                                      //поле для работы с сокетом
+    Semaphore semaphore;
 
     public class Listener implements View.OnClickListener {
         /**
@@ -32,10 +36,9 @@ public class MainActivity extends Activity {
         }
 
         public void onClick(View view) {
-            if (buttons[x][y].getText() == "" && client != null && client.getTurn()) {
+            if (buttons[x][y].getText() == "" && client != null && semaphore.tryAcquire()) {
                 client.write(Integer.toString(x), Integer.toString(y));
                 buttons[x][y].setText(client.getPlayer());
-                client.setTurn(false);
                 text.setText("wait");
             }
         }
@@ -44,9 +47,23 @@ public class MainActivity extends Activity {
     public class ClientListener implements View.OnClickListener {
         public void onClick(View view) {
             if (client == null) {
+                semaphore = new Semaphore(1);
+                semaphore.tryAcquire();
                 Toast toast = Toast.makeText(MainActivity.this, "", Toast.LENGTH_SHORT);
-                client = new Client(6666, IP, buttons, text, toast);
+                client = new Client(6666, IP, buttons, text, toast, semaphore);
                 client.execute();
+            }
+            if (client.isErrorInConnect()) {
+                try {
+                    client.cancel(true);
+                } catch (Exception e) {
+                    System.out.println("Error in ClientListener.");
+                    e.printStackTrace();
+                }
+                Toast toast = Toast.makeText(MainActivity.this, "", Toast.LENGTH_SHORT);
+                client = new Client(6666, IP, buttons, text, toast, semaphore);
+                client.execute();
+                text.setText("Connecting...");
             }
         }
     }
@@ -67,9 +84,9 @@ public class MainActivity extends Activity {
 
     public class setIPButtonListener implements View.OnClickListener {
         public void onClick(View view) {
-            if(client == null) {
+            if (client == null || client.isErrorInConnect()) {
                 Intent intent = new Intent(getApplicationContext(), setIPActivity.class);
-                startActivityForResult(intent,1);
+                startActivityForResult(intent, 1);
             }
         }
     }
@@ -141,11 +158,10 @@ public class MainActivity extends Activity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if(data!=null)
-        {
+        if (data == null) {
             return;
         }
-        String ip=data.getStringExtra("IP").toString();
-        if(ip.length()>0) IP = ip;
+        String ip = data.getStringExtra("IP").toString();
+        if (ip.length() > 0) IP = ip;
     }
 }

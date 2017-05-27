@@ -12,10 +12,11 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.util.concurrent.Semaphore;
 
 public class Client extends AsyncTask<Void, String, Void> {
 
-    String IP;                                 //локальный IP
+    String IP;                                              //локальный IP
     int PORT;                                               //номер порта
     Button[][] buttons;                                     //ссылка на кнопки(игровое поле)
     TextView text;                                          //текстовое сообщение
@@ -26,17 +27,20 @@ public class Client extends AsyncTask<Void, String, Void> {
     String opponent;                                        //символ противника
     String x, y;                                            //координаты хода
     Toast toast;                                            //всплывающее сообщение
-    boolean isMyTurn;                                       //флаг для синхронизации
+    boolean connectError;                                       //флаг для синхронизации
+    Semaphore semaphore;
 
     /*
     Конструктор
      */
-    public Client(int p, String ip, Button[][] b, TextView tv, Toast t) {
+    public Client(int p, String ip, Button[][] b, TextView tv, Toast t, Semaphore sem) {
         buttons = b;
         PORT = p;
         IP = ip;
         text = tv;
         toast = t;
+        semaphore = sem;
+        connectError = false;
     }
 
     /*
@@ -50,17 +54,13 @@ public class Client extends AsyncTask<Void, String, Void> {
     }
 
     /*
-    Возвращает очередь
-     */
-    public boolean getTurn() {
-        return isMyTurn;
+    */
+    boolean isErrorInConnect() {
+        return connectError;
     }
 
-    /*
-    Передает очередь другому игроку
-     */
-    public void setTurn(Boolean t) {
-        isMyTurn = t;
+    void setConnectError() {
+        connectError = true;
     }
 
     /*
@@ -116,7 +116,7 @@ public class Client extends AsyncTask<Void, String, Void> {
         try {
             InetAddress ipAddress = InetAddress.getByName(IP); // создаем объект который отображает вышеописанный IP-адрес.
             System.out.println("Trying connect to server");
-            clientSocket.connect(new InetSocketAddress(IP, PORT), 5000);
+            clientSocket.connect(new InetSocketAddress(IP, PORT), 3000);
             System.out.println("Connected to server");
             toast.setText("Connected to server");
             toast.show();
@@ -124,10 +124,9 @@ public class Client extends AsyncTask<Void, String, Void> {
             out = new DataOutputStream(clientSocket.getOutputStream());
             player = in.readUTF();
             if (player.toCharArray()[0] == 'O') {
-                isMyTurn = false;
                 opponent = "X";
             } else {
-                isMyTurn = true;
+                semaphore.release();
                 opponent = "O";
             }
             publishProgress("You are " + player);
@@ -139,9 +138,9 @@ public class Client extends AsyncTask<Void, String, Void> {
                 if (x.length() > 1) {
                     publishProgress(x);
                     if (player.toCharArray()[0] == 'O') {
-                        isMyTurn = false;
+                        semaphore.tryAcquire();
                     } else {
-                        isMyTurn = true;
+                        semaphore.release();
                     }
                     continue;
                 }
@@ -149,25 +148,29 @@ public class Client extends AsyncTask<Void, String, Void> {
                 System.out.println("Client:" + x);
                 System.out.println("Client:" + y);
                 publishProgress(x, y);
-                isMyTurn = true;
+                semaphore.release();
                 publishProgress("MASSAGE", "your turn");
             }
         } catch (java.net.ConnectException e) {
             publishProgress("ERROR", "Connection failed.");
-
         } catch (java.net.SocketTimeoutException e) {
             publishProgress("ERROR", "Timeout.");
         } catch (java.io.EOFException e) {
             System.out.println("Opponent closed application.");
             publishProgress("Opponent closed\n application.");
+            semaphore.tryAcquire();
         } catch (java.net.SocketException e) {
             System.out.println("Server closed.");
-            closeSocket();
-            setTurn(false);
+            semaphore.tryAcquire();
             publishProgress("ERROR", "Server closed.");
+        } catch (java.net.UnknownHostException e) {
+            publishProgress("ERROR", "Wrong IP.");
+            System.out.println("Wrong IP");
         } catch (Exception e) {
             System.out.println("Error in Client");
             e.printStackTrace();
+        } finally {
+            setConnectError();
         }
         return null;
     }
