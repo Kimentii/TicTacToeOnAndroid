@@ -59,7 +59,7 @@ public class Main {
 			Player winner;
 			game.start();
 			try {
-				while (true) {
+				 while (true) {
 					while (true) {
 						line = in.readUTF();
 						if (line.equals("closed")) {
@@ -96,7 +96,7 @@ public class Main {
 					}
 					while (true) {
 						line = in2.readUTF();
-						if (line.equals("closed")) {
+						if (line.equals( "closed")) {
 							throw new java.io.EOFException();
 						}
 						System.out.println("O: " + line);

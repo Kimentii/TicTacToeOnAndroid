@@ -69,7 +69,6 @@ public class MainActivity extends Activity {
 
     public class ExitButtonListener implements View.OnClickListener {
         public void onClick(View view) {
-
             finish();
         }
     }
@@ -126,13 +125,13 @@ public class MainActivity extends Activity {
         exitButton.setWidth(BUTTON_WIDTH);
         exitButton.setHeight(BUTTON_HEIGHT);
 
-        Button setIPbutton = new Button(this);
-        setIPbutton.setText("Set IP");
-        setIPbutton.setOnClickListener(new setIPButtonListener());
-        row.addView(setIPbutton, new TableRow.LayoutParams(TableRow.LayoutParams.MATCH_PARENT,
+        Button setIPButton = new Button(this);
+        setIPButton.setText("Set IP");
+        setIPButton.setOnClickListener(new setIPButtonListener());
+        row.addView(setIPButton, new TableRow.LayoutParams(TableRow.LayoutParams.MATCH_PARENT,
                 TableRow.LayoutParams.MATCH_PARENT));
-        setIPbutton.setWidth(BUTTON_WIDTH);
-        setIPbutton.setHeight(BUTTON_HEIGHT);
+        setIPButton.setWidth(BUTTON_WIDTH);
+        setIPButton.setHeight(BUTTON_HEIGHT);
 
         layout.addView(row, new TableLayout.LayoutParams(TableLayout.LayoutParams.MATCH_PARENT,
                 TableLayout.LayoutParams.MATCH_PARENT));
