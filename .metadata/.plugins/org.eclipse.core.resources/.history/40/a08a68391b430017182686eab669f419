@@ -1,0 +1,151 @@
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.ServerSocket;
+import java.net.Socket;
+
+public class Main {
+	static Game game = new Game();
+	static final int PORT = 6666;
+
+	public static void main(String[] args) {
+		try {
+			ServerSocket serverSocket = new ServerSocket(PORT); // создаем сокет
+																// сервера и
+																// прив€зываем
+																// его к
+																// вышеуказанному
+																// порту
+			System.out.println("Waiting for a client...");
+
+			Socket socket = serverSocket.accept(); // заставл€ем сервер ждать
+													// подключений и выводим
+													// сообщение когда кто-то
+													// св€залс€ с сервером
+			System.out.println("Got first client.");
+			System.out.println();
+
+			// Ѕерем входной и выходной потоки сокета, теперь можем получать и
+			// отсылать данные клиенту.
+			InputStream sin = socket.getInputStream();
+			OutputStream sout = socket.getOutputStream();
+
+			//  онвертируем потоки в другой тип, чтоб легче обрабатывать
+			// текстовые сообщени€.
+			DataInputStream in = new DataInputStream(sin);
+			DataOutputStream out = new DataOutputStream(sout);
+			out.writeUTF("X");
+
+			// ѕодключение второго игрока
+			System.out.println("Waiting for a client...");
+			Socket socket2 = serverSocket.accept();
+			System.out.println("Got second client.");
+			System.out.println();
+
+			// Ѕерем входной и выходной потоки сокета, теперь можем получать и
+			// отсылать данные клиенту.
+			InputStream sin2 = socket2.getInputStream();
+			OutputStream sout2 = socket2.getOutputStream();
+
+			//  онвертируем потоки в другой тип, чтоб легче обрабатывать
+			// текстовые сообщени€.
+			DataInputStream in2 = new DataInputStream(sin2);
+			DataOutputStream out2 = new DataOutputStream(sout2);
+			out2.writeUTF("O");
+
+			String line;
+			int x, y;
+			Player winner;
+			game.start();
+			try
+			{
+			while (true) {
+				while (true) {
+					line = in.readUTF();
+					if(line == "closed")
+					{
+						throw  new java.io.EOFException();
+					}
+					System.out.println("X: " + line);
+					out2.writeUTF(line);
+					out2.flush();
+					x = Integer.parseInt(line);
+					line = in.readUTF();
+					System.out.println("X: " + line);
+					out2.writeUTF(line);
+					out2.flush();
+					y = Integer.parseInt(line);
+	                if (game.makeTurn(x, y)) {
+	                    break;
+	                }
+				}
+				System.out.println("O is going to go");
+				winner = game.checkWinner();
+				if(winner != null)
+				{
+					out.writeUTF(winner.getName() + " wins.");
+					out2.writeUTF(winner.getName() + " wins.");
+					System.out.println(winner.getName() + " wins.");
+					game.reset();
+					continue;
+				}
+				if(game.isFieldFilled() && winner == null)
+				{
+					out.writeUTF("draw.");
+					out2.writeUTF("draw");
+					System.out.println("draw");
+					game.reset();
+					continue;
+				}
+				while(true)
+				{
+					line = in2.readUTF();
+					if(line == "closed");
+					System.out.println("O: "+ line);
+					out.writeUTF(line);
+					out.flush();
+					x = Integer.parseInt(line);
+					line = in2.readUTF();
+					System.out.println("O: "+ line);
+					out.writeUTF(line);
+					out.flush();
+					y = Integer.parseInt(line);
+	                if (game.makeTurn(x, y)) {
+	                    break;
+	                }
+				}
+				System.out.println("O end its step");
+				winner = game.checkWinner();
+				if(winner != null)
+				{
+					out.writeUTF(winner.getName() + " win.");
+					out2.writeUTF(winner.getName() + " win.");
+					System.out.println(winner.getName() + " win.");
+					game.reset();
+				}
+				if(game.isFieldFilled() && winner == null)
+				{
+					out.writeUTF("draw.");
+					out2.writeUTF("draw");
+					System.out.println("draw");
+					game.reset();
+				}
+			}
+			}catch(java.io.EOFException e)
+			{
+				System.out.println("Sombody terminated.");
+				socket.shutdownInput();
+				socket.shutdownOutput();
+				socket.close();
+				socket2.shutdownInput();
+				socket2.shutdownOutput();
+				socket2.close();
+			}
+		}	catch (Exception e) {
+			e.printStackTrace();
+		}
+
+	}
+
+}

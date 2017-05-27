@@ -14,12 +14,12 @@
             android:id="@+id/editText"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_alignParentTop="true"
+            android:layout_centerHorizontal="true"
             android:layout_marginTop="194dp"
             android:ems="10"
             android:hint="Enter IP"
-            android:inputType="textPersonName"
-            android:layout_alignParentTop="true"
-            android:layout_centerHorizontal="true" />
+            android:inputType="textPersonName" />
 
         <Button
             android:id="@+id/setIPButton"

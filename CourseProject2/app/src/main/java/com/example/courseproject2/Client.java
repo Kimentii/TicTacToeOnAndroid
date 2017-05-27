@@ -75,9 +75,22 @@ public class Client extends AsyncTask<Void, String, Void> {
      */
     public void write(String x, String y) {
         try {
-            if (clientSocket != null) {
+            if (clientSocket.isConnected()) {
                 out.writeUTF(x);
                 out.writeUTF(y);
+            }
+        } catch (java.net.SocketException e) {
+            System.out.println("Socket closed");
+        } catch (Exception e) {
+            System.out.println("Error in Client.write");
+            e.printStackTrace();
+        }
+    }
+
+    public void write(String x) {
+        try {
+            if (clientSocket.isConnected()) {
+                out.writeUTF(x);
             }
         } catch (java.net.SocketException e) {
             System.out.println("Socket closed");
@@ -133,7 +146,9 @@ public class Client extends AsyncTask<Void, String, Void> {
             System.out.println("I'm " + player);
             System.out.println("My opponent is " + opponent);
             while (true) {
-                if (isCancelled()) return null;
+                if (isCancelled()) {
+                    closeSocket();
+                }
                 x = in.readUTF();
                 if (x.length() > 1) {
                     publishProgress(x);
@@ -205,11 +220,12 @@ public class Client extends AsyncTask<Void, String, Void> {
     }
 
     /*
-    Метод выполняющийся после вызова cancel в главном потоке
-     */
+        Метод выполняющийся после вызова cancel в главном потоке
+         */
     @Override
     protected void onCancelled() {
         super.onCancelled();
+        System.out.println("On cancelled");
         closeSocket();
     }
 }

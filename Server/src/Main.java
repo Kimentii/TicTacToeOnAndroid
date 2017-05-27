@@ -23,7 +23,7 @@ public class Main {
 													// подключений и выводим
 													// сообщение когда кто-то
 													// связался с сервером
-			System.out.println("Got a client :) ... Finally, someone saw me through all the cover!");
+			System.out.println("Got first client.");
 			System.out.println();
 
 			// Берем входной и выходной потоки сокета, теперь можем получать и
@@ -40,7 +40,7 @@ public class Main {
 			// Подключение второго игрока
 			System.out.println("Waiting for a client...");
 			Socket socket2 = serverSocket.accept();
-			System.out.println("Got a client :) ... Finally, someone saw me through all the cover!");
+			System.out.println("Got second client.");
 			System.out.println();
 
 			// Берем входной и выходной потоки сокета, теперь можем получать и
@@ -58,77 +58,76 @@ public class Main {
 			int x, y;
 			Player winner;
 			game.start();
-			try
-			{
-			while (true) {
-				while (true) {
-					line = in.readUTF();
-					System.out.println("X: " + line);
-					out2.writeUTF(line);
-					out2.flush();
-					x = Integer.parseInt(line);
-					line = in.readUTF();
-					System.out.println("X: " + line);
-					out2.writeUTF(line);
-					out2.flush();
-					y = Integer.parseInt(line);
-	                if (game.makeTurn(x, y)) {
-	                    break;
-	                }
+			try {
+				 while (true) {
+					while (true) {
+						line = in.readUTF();
+						if (line.equals("closed")) {
+							throw new java.io.EOFException();
+						}
+						System.out.println("X: " + line);
+						out2.writeUTF(line);
+						out2.flush();
+						x = Integer.parseInt(line);
+						line = in.readUTF();
+						System.out.println("X: " + line);
+						out2.writeUTF(line);
+						out2.flush();
+						y = Integer.parseInt(line);
+						if (game.makeTurn(x, y)) {
+							break;
+						}
+					}
+					System.out.println("O is going to go");
+					winner = game.checkWinner();
+					if (winner != null) {
+						out.writeUTF(winner.getName() + " wins.");
+						out2.writeUTF(winner.getName() + " wins.");
+						System.out.println(winner.getName() + " wins.");
+						game.reset();
+						continue;
+					}
+					if (game.isFieldFilled() && winner == null) {
+						out.writeUTF("draw.");
+						out2.writeUTF("draw");
+						System.out.println("draw");
+						game.reset();
+						continue;
+					}
+					while (true) {
+						line = in2.readUTF();
+						if (line.equals( "closed")) {
+							throw new java.io.EOFException();
+						}
+						System.out.println("O: " + line);
+						out.writeUTF(line);
+						out.flush();
+						x = Integer.parseInt(line);
+						line = in2.readUTF();
+						System.out.println("O: " + line);
+						out.writeUTF(line);
+						out.flush();
+						y = Integer.parseInt(line);
+						if (game.makeTurn(x, y)) {
+							break;
+						}
+					}
+					System.out.println("O end its step");
+					winner = game.checkWinner();
+					if (winner != null) {
+						out.writeUTF(winner.getName() + " win.");
+						out2.writeUTF(winner.getName() + " win.");
+						System.out.println(winner.getName() + " win.");
+						game.reset();
+					}
+					if (game.isFieldFilled() && winner == null) {
+						out.writeUTF("draw.");
+						out2.writeUTF("draw");
+						System.out.println("draw");
+						game.reset();
+					}
 				}
-				System.out.println("O is going to go");
-				winner = game.checkWinner();
-				if(winner != null)
-				{
-					out.writeUTF(winner.getName() + " wins.");
-					out2.writeUTF(winner.getName() + " wins.");
-					System.out.println(winner.getName() + " wins.");
-					game.reset();
-					continue;
-				}
-				if(game.isFieldFilled() && winner == null)
-				{
-					out.writeUTF("draw.");
-					out2.writeUTF("draw");
-					System.out.println("draw");
-					game.reset();
-					continue;
-				}
-				while(true)
-				{
-					line = in2.readUTF();
-					System.out.println("O: "+ line);
-					out.writeUTF(line);
-					out.flush();
-					x = Integer.parseInt(line);
-					line = in2.readUTF();
-					System.out.println("O: "+ line);
-					out.writeUTF(line);
-					out.flush();
-					y = Integer.parseInt(line);
-	                if (game.makeTurn(x, y)) {
-	                    break;
-	                }
-				}
-				System.out.println("O end its step");
-				winner = game.checkWinner();
-				if(winner != null)
-				{
-					out.writeUTF(winner.getName() + " win.");
-					out2.writeUTF(winner.getName() + " win.");
-					System.out.println(winner.getName() + " win.");
-					game.reset();
-				}
-				if(game.isFieldFilled() && winner == null)
-				{
-					out.writeUTF("draw.");
-					out2.writeUTF("draw");
-					System.out.println("draw");
-					game.reset();
-				}
-			}
-			}catch(java.io.EOFException e)
-			{
+			} catch (java.io.EOFException e) {
 				System.out.println("Sombody terminated.");
 				socket.shutdownInput();
 				socket.shutdownOutput();
@@ -137,8 +136,8 @@ public class Main {
 				socket2.shutdownOutput();
 				socket2.close();
 			}
-		}	catch (Exception x) {
-			x.printStackTrace();
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
 
 	}

@@ -17,6 +17,7 @@ public class setIPActivity extends AppCompatActivity {
 
     EditText editText;
     Button setIPButton;
+
     public class setIPButtonListener implements View.OnClickListener {
         public void onClick(View view) {
             Intent intent = new Intent();
@@ -25,6 +26,7 @@ public class setIPActivity extends AppCompatActivity {
             finish();
         }
     }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
